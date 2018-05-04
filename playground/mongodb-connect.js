@@ -1,5 +1,5 @@
 // const MongoClient = require('mongodb').MongoClient;
-const {MongoClient, ObjectID} = require('mongodb')
+const {MongoClient, ObjectID} = require('mongodb') // ECMA6 
 
 // var obj = new ObjectID();
 // console.log(obj);
