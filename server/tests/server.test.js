@@ -10,7 +10,9 @@ const todos = [{
   text: 'First test todo'
 }, {
   _id: new ObjectID(),
-  text: 'Second test todo'
+  text: 'Second test todo',
+  completed: true,
+  completedAt: 333
 }];
 
 describe('POST /todos', function() {
@@ -44,7 +46,7 @@ describe('POST /todos', function() {
       });
   });
 
-  it('shoudl not create todo with invalid body data', (done) => {
+  it('should not create todo with invalid body data', (done) => {
     request(app)
       .post('/todos')
       .send({text: ''})
@@ -145,5 +147,51 @@ describe('DELETE /todos/:id', function() {
     .expect(404)
     .end(done);
   });
+});
 
+describe('PATCH /todos/:id', function() {
+  this.timeout(4000);
+
+  beforeEach(async () => {
+    await Todo.remove({});
+    await Todo.insertMany(todos);
+  });
+
+  it('should update the todo', (done) => {
+    var hexId = todos[0]._id.toHexString();
+    var text = "Updated text";
+
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({
+        completed: true,
+        text
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completed).toBe(true);
+        expect(typeof res.body.todo.completedAt).toBe('number');
+      })
+      .end(done);
+  });
+
+  it('should clear completedAt when todo is not completed', (done) => {
+    var hexId = todos[1]._id.toHexString();
+    var text = "Updated text!!";
+
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({
+        completed: false,
+        text
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.completedAt).toBeFalsy();
+      })
+      .end(done);
+  });
 });
