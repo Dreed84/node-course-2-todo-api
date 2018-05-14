@@ -111,6 +111,11 @@ describe('GET /todos/:id', function() {
 describe('DELETE /todos/:id', function() {
   this.timeout(4000);
 
+  beforeEach(async () => {
+    await Todo.remove({});
+    await Todo.insertMany(todos);
+  });
+
   it('should remove a todo doc', (done) => {
     var hexId = todos[1]._id.toHexString();
 
@@ -151,11 +156,6 @@ describe('DELETE /todos/:id', function() {
 
 describe('PATCH /todos/:id', function() {
   this.timeout(4000);
-
-  beforeEach(async () => {
-    await Todo.remove({});
-    await Todo.insertMany(todos);
-  });
 
   it('should update the todo', (done) => {
     var hexId = todos[0]._id.toHexString();
