@@ -187,6 +187,8 @@ describe('PATCH /todos/:id', function() {
 describe('GET /users/me', function() {
   this.timeout(4000);
 
+  beforeEach(populateUsers);
+
   it('should return user if authenticated', (done) => {
     request(app)
       .get('/users/me')
@@ -210,8 +212,10 @@ describe('GET /users/me', function() {
   });
 });
 
-describe('GET /users', function() {
+describe('POST /users', function() {
   this.timeout(4000);
+
+  beforeEach(populateUsers);
 
   it('should create a user', (done) => {
     var email = 'example@example.com';
@@ -235,7 +239,7 @@ describe('GET /users', function() {
           expect(user).toBeTruthy();
           expect(user.password).not.toBe(password);
           done();
-        });
+        }).catch((e) => done(e));
       });
   });
 
@@ -259,5 +263,60 @@ describe('GET /users', function() {
       })
       .expect(400)
       .end(done);
+  });
+});
+
+describe('POST /users/login', function() {
+  this.timeout(4000);
+
+  beforeEach(populateUsers);
+
+  it('should login user and return auth token', (done) => {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: users[1].email,
+        password: users[1].password
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toBeTruthy();
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(users[1]._id).then((user) => {
+          expect(user.tokens[0]).toMatchObject({
+            access: 'auth',
+            token: res.headers['x-auth']
+          });
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('should reject invalid login', (done) => {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: users[1].email,
+        password: 'wrongpassword'
+      })
+      .expect(400)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toBeFalsy();
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(users[1]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((e) => done(e));
+      });
   });
 });
