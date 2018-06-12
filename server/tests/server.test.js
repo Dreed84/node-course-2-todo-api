@@ -10,7 +10,6 @@ const {users, todos, populateUsers, populateTodos} = require('./seed/seed');
 describe('POST /todos', function() {
   this.timeout(4000);
 
-  beforeEach(populateUsers);
   beforeEach(populateTodos);
 
   it('should create a new todo', (done) => {
@@ -57,6 +56,8 @@ describe('POST /todos', function() {
 describe('GET /todos', function() {
   this.timeout(4000);
 
+  beforeEach(populateTodos);
+
   it('should get all todos', (done) => {
     request(app)
       .get('/todos')
@@ -70,6 +71,8 @@ describe('GET /todos', function() {
 
 describe('GET /todos/:id', function() {
   this.timeout(4000);
+
+  beforeEach(populateTodos);
 
   it('should return todo doc', (done) => {
     request(app)
@@ -101,7 +104,6 @@ describe('GET /todos/:id', function() {
 describe('DELETE /todos/:id', function() {
   this.timeout(4000);
 
-  beforeEach(populateUsers);
   beforeEach(populateTodos);
 
   it('should remove a todo doc', (done) => {
@@ -144,6 +146,8 @@ describe('DELETE /todos/:id', function() {
 
 describe('PATCH /todos/:id', function() {
   this.timeout(4000);
+
+  beforeEach(populateTodos);
 
   it('should update the todo', (done) => {
     var hexId = todos[0]._id.toHexString();
@@ -314,6 +318,29 @@ describe('POST /users/login', function() {
         }
 
         User.findById(users[1]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+});
+
+describe('DELETE /users/me/token', function() {
+  this.timeout(4000);
+
+  beforeEach(populateUsers);
+
+  it('should remove auth token on logout', (done) => {
+    request(app)
+      .delete('/users/me/token')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(users[0]._id).then((user) => {
           expect(user.tokens.length).toBe(0);
           done();
         }).catch((e) => done(e));
