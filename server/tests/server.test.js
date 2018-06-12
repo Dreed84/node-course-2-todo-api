@@ -235,7 +235,7 @@ describe('GET /users', function() {
           expect(user).toBeTruthy();
           expect(user.password).not.toBe(password);
           done();
-        })
+        });
       });
   });
 
